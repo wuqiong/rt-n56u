@@ -483,6 +483,11 @@ if [ "$CONFIG_FIRMWARE_INCLUDE_AUDIO" != "y" ] || [ "$CONFIG_FIRMWARE_ENABLE_USB
 	func_disable_kernel_param "CONFIG_SOUND"
 fi
 #######################################################################
+func_enable_kernel_param "CONFIG_EXPERIMENTAL"
+func_enable_kernel_param "CONFIG_NETFILTER_TPROXY"
+func_enable_kernel_param "CONFIG_NETFILTER_XT_TARGET_TPROXY"
+#######################################################################
+#######################################################################
 echo --------------------------MAKE-DEP--------------------------------
 make dep
 echo --------------------------MAKE-ALL--------------------------------
