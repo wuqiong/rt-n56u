@@ -1,0 +1,19 @@
+#
+# GobiNet driver configuration.
+#
+
+comment "GobiNet Drivers"
+
+
+
+#
+# USB Transceiver Drivers
+#
+config USB_GOBINET
+	tristate "GobiNet Drivers"
+	default m
+	select CONFIG_USBNET
+	help
+	  Provides GobiNet LTE driver
+
+
