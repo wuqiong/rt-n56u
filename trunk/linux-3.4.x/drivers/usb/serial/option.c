@@ -554,6 +554,11 @@ static void option_instat_callback(struct urb *urb);
 #define WETELECOM_PRODUCT_6802			0x6802
 #define WETELECOM_PRODUCT_WMD300		0x6803
 
+/* XINYI LTE PRODUCTS */
+#define DTM710_VENDOR_ID			0x05C6
+#define DTM710_PRODUCT_W			0x5012
+#define DTM710_PRODUCT_G			0x5013
+
 /* some devices interfaces need special handling due to a number of reasons */
 enum option_blacklist_reason {
 		OPTION_BLACKLIST_NONE = 0,
@@ -705,7 +710,17 @@ static const struct option_blacklist_info cinterion_rmnet2_blacklist = {
 	.reserved = BIT(4) | BIT(5),
 };
 
+/************************************add for XY 9X07**************************/
+static const struct option_blacklist_info XY710_RMNET_blacklist = {
+	.reserved = BIT(4),
+};
+/*****************************************************************************/
+
 static const struct usb_device_id option_ids[] = {
+	{ USB_DEVICE(DTM710_VENDOR_ID, DTM710_PRODUCT_W), .driver_info = (kernel_ulong_t)&XY710_RMNET_blacklist },
+	{ USB_DEVICE(DTM710_VENDOR_ID, DTM710_PRODUCT_G), .driver_info = (kernel_ulong_t)&XY710_RMNET_blacklist },
+
+
 	{ USB_DEVICE(OPTION_VENDOR_ID, OPTION_PRODUCT_COLT) },
 	{ USB_DEVICE(OPTION_VENDOR_ID, OPTION_PRODUCT_RICOLA) },
 	{ USB_DEVICE(OPTION_VENDOR_ID, OPTION_PRODUCT_RICOLA_LIGHT) },
