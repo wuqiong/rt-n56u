@@ -1,0 +1,9 @@
+opengt
+ set com 115200n81
+ set senddelay 0.03
+ waitquiet 1 0.2
+
+ send "AT$NDISDIAL=0,1\r\n"
+ waitquiet 1 0.2
+ exit 0
+

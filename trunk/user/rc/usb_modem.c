@@ -200,6 +200,10 @@ find_modem_node(const char* pattern, int fetch_pref, int fetch_devnum, int fetch
 static int
 get_modem_node(const char* pattern, int devnum, int *devnum_out)
 {
+	int i_mode_type = nvram_get_int("modem_type");
+	if (i_mode_type == 4) {
+		return 2;//GobiNet AT ttyUSB2
+	}
 	int valid_node = -1;
 	int i_node_user = nvram_get_int("modem_node") - 1;
 	if (i_node_user >= 0) {
@@ -276,6 +280,23 @@ is_ready_modem_ndis(int *devnum_out)
 	return 0;
 }
 
+static int
+is_ready_modem_gobinet(int *devnum_out)
+{
+	char gobi_ifname[16];
+
+	//if (get_modem_gobi_ifname(gobi_ifname, devnum_out) && is_interface_exist(gobi_ifname))
+	if (get_modem_gobi_ifname(gobi_ifname, devnum_out) )
+	{
+		logmessage(LOGNAME, "MyDEBUG**  is_ready_modem_gobinet:%s, %d  func:%s!", gobi_ifname, *devnum_out, __FUNCTION__);
+		return 1;
+	}else
+	{
+		logmessage(LOGNAME, "MyDEBUG**  isn't_ready_modem_gobinet:%s, %d  func:%s!", gobi_ifname, *devnum_out, __FUNCTION__);
+		return 0;
+	}
+}
+
 int
 get_modem_devnum(void)
 {
@@ -286,11 +307,15 @@ get_modem_devnum(void)
 		if (nvram_get_int("modem_type") == 3) {
 			if (!is_ready_modem_ndis(&modem_devnum))
 				modem_devnum = 0;
+		} else if(nvram_get_int("modem_type") == 4) {
+			if (!is_ready_modem_gobinet(&modem_devnum))
+				modem_devnum = 0;
 		} else {
 			if (!is_ready_modem_ras(&modem_devnum))
 				modem_devnum = 0;
 		}
 	}
+	logmessage(LOGNAME, "MyDEBUG**  get modem_devnum:%d  %s!", modem_devnum, __FUNCTION__);
 
 	return modem_devnum;
 }
@@ -310,6 +335,22 @@ get_modem_ndis_ifname(char ndis_ifname[16], int *devnum_out)
 			sprintf(ndis_ifname, "weth%d", valid_node);
 			return 1;
 		}
+	}
+
+	return 0;
+}
+
+int
+get_modem_gobi_ifname(char gobi_ifname[16], int *devnum_out)
+{
+	int valid_node = 0;
+	if(devnum_out) *devnum_out=2;
+	sprintf(gobi_ifname, "usb%d", valid_node);
+	return 1;
+	valid_node = find_modem_node("usb", 0, 0, -1, devnum_out); // first exist node
+	if (valid_node >= 0) {
+		sprintf(gobi_ifname, "usb%d", valid_node);
+		return 1;
 	}
 
 	return 0;
@@ -456,6 +497,17 @@ sierra_control_network(const char* control_node, int is_start)
 		control_node, MODEM_SCRIPTS_DIR, (is_start) ? "Sierra_conn.scr" : "Sierra_disconn.scr");
 }
 
+static int
+GobiNet_control_network(const char* control_node, int is_start)
+{
+	int ret = doSystem("/bin/comgt -d /dev/%s -s %s/ppp/3g/%s",
+		control_node, MODEM_SCRIPTS_DIR, (is_start) ? "GobiNet_conn.scr" : "GobiNet_disconn.scr");
+	logmessage(LOGNAME,"/bin/comgt -d /dev/%s -s %s/ppp/3g/%s",
+		control_node, MODEM_SCRIPTS_DIR, (is_start) ? "GobiNet_conn.scr" : "GobiNet_disconn.scr");
+	logmessage(LOGNAME, "MyDEBUG** comgt GobiNet return:%d .", ret);
+	return 0;
+}
+
 #if 0
 static int
 ncm_control_network(const char* control_node, int is_start)
@@ -532,6 +584,29 @@ ndis_control_network(char *ndis_ifname, int devnum, int is_start)
 	return 1;
 }
 
+static int
+gobi_control_network(char *ndis_ifname, int devnum, int is_start)
+{
+	int valid_node;
+	char control_node_tty[16] = {0};
+
+
+	/* check tty device */
+	valid_node = get_modem_node("ttyUSB", devnum, NULL);
+	if (valid_node >= 0)
+		sprintf(control_node_tty, "ttyUSB%d", valid_node);
+
+	if (strlen(control_node_tty) > 0) {
+		if (is_usbnet_has_module(ndis_ifname, "GobiNet"))
+		{
+			logmessage(LOGNAME, "MyDEBUG** gobi_control_network: %s,devnum:%d func:%s.",control_node_tty, devnum,__FUNCTION__);
+			return GobiNet_control_network(control_node_tty, is_start);
+		}
+	}
+
+	return 1;
+}
+
 #if 0
 static void
 unlink_modem_ras(void)
@@ -577,6 +652,7 @@ unload_modem_modules(void)
 {
 	unlink(QMI_CLIENT_ID);
 	int ret = 0;
+	ret |= module_smart_unload("GobiNet", 1);
 	ret |= module_smart_unload("rndis_host", 1);
 	ret |= module_smart_unload("qmi_wwan", 1);
 	ret |= module_smart_unload("cdc_mbim", 1);
@@ -611,6 +687,8 @@ reload_modem_modules(int modem_type, int reload)
 		module_smart_load("huawei_cdc_ncm", NULL);
 		module_smart_load("cdc_mbim", NULL);
 		module_smart_load("sierra_net", NULL);
+	} else if (modem_type == 4) {
+		module_smart_load("GobiNet", NULL);
 	} else {
 		ret |= module_smart_unload("sierra_net", 1);
 		ret |= module_smart_unload("cdc_mbim", 1);
@@ -761,6 +839,39 @@ launch_wan_usbnet(int unit)
 	return -1;
 }
 
+
+int
+launch_wan_gobinet(int unit)
+{
+	int modem_devnum = 0;
+	char gobi_ifname[16] = {0};
+
+	if (get_modem_gobi_ifname(gobi_ifname, &modem_devnum) && is_interface_exist(gobi_ifname)) {
+		int gobi_mtu = nvram_safe_get_int("modem_mtu", 1500, 1000, 1500);
+
+		check_upnp_wanif_changed(gobi_ifname);
+		set_wan_unit_value(unit, "proto_t", "GobiNet Modem");
+		set_wan_unit_value(unit, "ifname_t", gobi_ifname);
+
+		/* bring up GobiNet interface */
+		doSystem("ifconfig %s mtu %d up %s", gobi_ifname, gobi_mtu, "0.0.0.0");
+
+		/* re-build iptables rules (first stage w/o WAN IP) */
+		start_firewall_ex();
+
+		if (gobi_control_network(gobi_ifname, modem_devnum, 1) == 0)
+			sleep(5);
+
+		logmessage(LOGNAME, "MyDEBUG** GobiNet gobi_ifname: %s , unit:%d .", gobi_ifname, unit);
+		start_udhcpc_wan(gobi_ifname, unit, 0);
+
+		return 0;
+	}
+
+	set_wan_unit_value(unit, "ifname_t", "");
+	return -1;
+}
+
 void
 stop_wan_usbnet(void)
 {
@@ -771,6 +882,19 @@ stop_wan_usbnet(void)
 		ndis_control_network(ndis_ifname, modem_devnum, 0);
 		if (is_interface_exist(ndis_ifname))
 			ifconfig(ndis_ifname, 0, "0.0.0.0", NULL);
+	}
+}
+
+void
+stop_wan_gobinet(void)
+{
+	int modem_devnum = 0;
+	char gobi_ifname[16] = {0};
+
+	if (get_modem_gobi_ifname(gobi_ifname, &modem_devnum)) {
+		gobi_control_network(gobi_ifname, modem_devnum, 0);
+		if (is_interface_exist(gobi_ifname))
+			ifconfig(gobi_ifname, 0, "0.0.0.0", NULL);
 	}
 }
 

@@ -876,11 +876,17 @@ start_wan(void)
 		reconnect_apcli(wan_ifname, 0);
 		
 #if defined (USE_USB_SUPPORT)
+		int ret = get_usb_modem_wan(unit);
+		logmessage(LOGNAME, "MyDEBUG** get_usb_modem_wan unit:%d ret:%d",unit,ret);
 		if (get_usb_modem_wan(unit))
 		{
 			if (nvram_get_int("modem_type") == 3)
 			{
 				launch_wan_usbnet(unit);
+			}
+			else if (nvram_get_int("modem_type") == 4)
+			{
+				launch_wan_gobinet(unit);
 			}
 			else
 			{
@@ -1123,6 +1129,7 @@ stop_wan(void)
 #if defined (USE_USB_SUPPORT)
 	/* Bring down usbnet interface */
 	stop_wan_usbnet();
+	stop_wan_gobinet();
 #endif
 
 	/* Remove dynamically created links */
@@ -1551,6 +1558,8 @@ manual_wan_disconnect(void)
 	{
 		if (nvram_get_int("modem_type") == 3)
 			stop_wan();
+		else if (nvram_get_int("modem_type") == 4)
+			stop_wan();
 		else
 			stop_wan_ppp();
 	}
@@ -1921,6 +1930,7 @@ select_usb_modem_to_wan(void)
 		}
 	}
 #endif
+	logmessage(LOGNAME, "MyDEBUG** set_usb_modem_dev_wan,devnum:%d .", modem_devnum);
 	set_usb_modem_dev_wan(0, modem_devnum);
 }
 
@@ -1985,6 +1995,9 @@ get_wan_ifname(char wan_ifname[16])
 
 	if (get_usb_modem_wan(unit)){
 		if (nvram_get_int("modem_type") == 3) {
+			if (is_usbnet_interface(ifname_temp))
+				ifname = ifname_temp;
+		} else if(nvram_get_int("modem_type") == 4){
 			if (is_usbnet_interface(ifname_temp))
 				ifname = ifname_temp;
 		} else {

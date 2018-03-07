@@ -79,7 +79,7 @@ function switch_modem_rule(){
 
 function switch_modem_type(){
 	var mtype = document.form.modem_type.value;
-	if (mtype == "3") {
+	if (mtype == "3" || mtype == "4") {
 		$("row_modem_dial").style.display = "none";
 		$("row_modem_apn").style.display = "";
 		$("row_modem_nets").style.display = "";
@@ -134,7 +134,7 @@ function gen_list(){
 
 	gen_isp_list();
 
-	if (mtype != "3"){
+	if (mtype != "3" && mtype != "4"){
 		var sp_idx = 0;
 		var sp_len = 0;
 		var ar_len = protolist.length;
@@ -183,7 +183,7 @@ function gen_list(){
 
 	for(i = 0; i < isplist.length; i++){
 		var caption = isplist[i];
-		if (mtype == "3"){
+		if (mtype == "3" || mtype == "4"){
 			if (protolist[i] == "1")
 				caption = caption + " (EVDO)";
 			else if (protolist[i] == "2")
@@ -343,6 +343,7 @@ function done_validating(action){
                                                     <option value="1" <% nvram_match_x("", "modem_type", "1", "selected"); %>>RAS: CDMA2000 (EVDO)</option>
                                                     <option value="2" <% nvram_match_x("", "modem_type", "2", "selected"); %>>RAS: TD-SCDMA</option>
                                                     <option value="3" <% nvram_match_x("", "modem_type", "3", "selected"); %>>NDIS: LTE and other</option>
+                                                    <option value="4" <% nvram_match_x("", "modem_type", "4", "selected"); %>>GobiNet: LTE and other</option>
                                                 </select>
                                             </td>
                                         </tr>

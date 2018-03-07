@@ -119,6 +119,8 @@ int is_usbnet_interface(const char *ifname)
 		return 1;
 	if(!strncmp(ifname, "wwan", 4))
 		return 1;
+	if(!strncmp(ifname, "usb",  3))
+		return 1;
 	return 0;
 }
 

@@ -1071,6 +1071,13 @@ handle_notifications(void)
 						reload_modem_modules(modem_type, 1);
 					}
 				}
+				if (nvram_modem_type == 4 || modem_type == 4) {
+					if (modem_rule > 0 && !modules_reloaded) {
+						if (need_restart_wan && !wan_stopped)
+							stop_wan();
+						reload_modem_modules(modem_type, 1);
+					}
+				}
 				nvram_modem_type = modem_type;
 			}
 			if (need_restart_wan)

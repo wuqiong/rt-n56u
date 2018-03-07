@@ -1533,6 +1533,22 @@ wanlink_hook(int eid, webs_t wp, int argc, char **argv)
 					}
 				}
 				strcpy(wan_desc, "USB Modem (NDIS/RNDIS)");
+			} else if(nvram_get_int("modem_type") == 4) {
+				if (is_usbnet_interface(wan_ifname)) {
+					wan_ifstate = get_if_state(wan_ifname, addr4_wan);
+					if (wan_ifstate > 0) {
+						unsigned char mac[8];
+
+						if (get_interface_hwaddr(wan_ifname, mac) == 0) {
+							sprintf(wan_mac, "%02X:%02X:%02X:%02X:%02X:%02X",
+								mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+						}
+
+						wan_bytes_rx = get_ifstats_bytes_rx(wan_ifname);
+						wan_bytes_tx = get_ifstats_bytes_tx(wan_ifname);
+					}
+				}
+				strcpy(wan_desc, "USB Modem (GobiNet/LTE 4G)");
 			} else {
 				if (strncmp(wan_ifname, "ppp", 3) != 0)
 					wan_ifname = IFNAME_RAS;

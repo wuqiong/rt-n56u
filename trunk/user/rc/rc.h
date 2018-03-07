@@ -702,13 +702,16 @@ int detect_wan_main(int argc, char *argv[]);
 /* usb_modem.c */
 int  get_modem_devnum(void);
 int  get_modem_ndis_ifname(char ndis_ifname[16], int *devnum_out);
+int  get_modem_gobi_ifname(char gobi_ifname[16], int *devnum_out);
 void notify_modem_on_wan_ether_link_changed(int has_link);
 void safe_remove_usb_modem(void);
 void unload_modem_modules(void);
 void reload_modem_modules(int modem_type, int reload);
 int  launch_wan_modem_ras(int unit);
 int  launch_wan_usbnet(int unit);
+int  launch_wan_gobinet(int unit);
 void stop_wan_usbnet(void);
+void stop_wan_gobinet(void);
 int  zerocd_main(int argc, char **argv);
 
 /* hotplug_usb.c */

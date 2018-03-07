@@ -314,6 +314,8 @@ int mdev_net_main(int argc, char **argv)
 
 	if (nvram_invmatch("modem_prio", "0") && nvram_match("modem_rule", "1") && nvram_match("modem_type", "3"))
 		notify_rc("on_hotplug_usb_modem");
+	if (nvram_invmatch("modem_prio", "0") && nvram_match("modem_rule", "1") && nvram_match("modem_type", "4"))
+		notify_rc("on_hotplug_usb_modem");
 
 	usb_dbg("(%s): Success!\n", device_name);
 
@@ -381,6 +383,8 @@ int mdev_tty_main(int argc, char **argv)
 	}
 
 	if (nvram_invmatch("modem_prio", "0") && nvram_match("modem_rule", "1") && nvram_invmatch("modem_type", "3"))
+		notify_rc("on_hotplug_usb_modem");
+	if (nvram_invmatch("modem_prio", "0") && nvram_match("modem_rule", "1") && nvram_invmatch("modem_type", "4"))
 		notify_rc("on_hotplug_usb_modem");
 
 	usb_dbg("(%s): Success!\n", device_name);
