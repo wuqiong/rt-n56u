@@ -240,6 +240,8 @@ static inline void inet_csk_reset_xmit_timer(struct sock *sk, const int what,
 
 extern struct sock *inet_csk_accept(struct sock *sk, int flags, int *err);
 
+extern u32 inet_synq_hash(const __be32 raddr, const __be16 rport, const u32 rnd,
+			  const u32 synq_hsize);
 extern struct request_sock *inet_csk_search_req(const struct sock *sk,
 						struct request_sock ***prevp,
 						const __be16 rport,
@@ -251,8 +253,7 @@ extern int inet_csk_get_port(struct sock *sk, unsigned short snum);
 
 extern struct dst_entry* inet_csk_route_req(struct sock *sk,
 					    struct flowi4 *fl4,
-					    const struct request_sock *req,
-					    bool nocache);
+					    const struct request_sock *req);
 extern struct dst_entry* inet_csk_route_child_sock(struct sock *sk,
 						   struct sock *newsk,
 						   const struct request_sock *req);

@@ -223,7 +223,7 @@ static const char *const af_family_slock_key_strings[AF_MAX+1] = {
   "slock-AF_IEEE802154", "slock-AF_CAIF" , "slock-AF_ALG"      ,
   "slock-AF_NFC"   , "slock-AF_MAX"
 };
-static const char *const af_family_clock_key_strings[AF_MAX+1] = {
+char *const af_family_clock_key_strings[AF_MAX+1] = {
   "clock-AF_UNSPEC", "clock-AF_UNIX"     , "clock-AF_INET"     ,
   "clock-AF_AX25"  , "clock-AF_IPX"      , "clock-AF_APPLETALK",
   "clock-AF_NETROM", "clock-AF_BRIDGE"   , "clock-AF_ATMPVC"   ,
@@ -244,7 +244,7 @@ static const char *const af_family_clock_key_strings[AF_MAX+1] = {
  * sk_callback_lock locking rules are per-address-family,
  * so split the lock classes by using a per-AF key:
  */
-static struct lock_class_key af_callback_keys[AF_MAX];
+struct lock_class_key af_callback_keys[AF_MAX];
 
 /* Take into consideration the size of the struct sk_buff overhead in the
  * determination of these values, since that is non-constant across
@@ -422,6 +422,12 @@ discard_and_relse:
 }
 EXPORT_SYMBOL(sk_receive_skb);
 
+void sk_reset_txq(struct sock *sk)
+{
+	sk_tx_queue_clear(sk);
+}
+EXPORT_SYMBOL(sk_reset_txq);
+
 struct dst_entry *__sk_dst_check(struct sock *sk, u32 cookie)
 {
 	struct dst_entry *dst = __sk_dst_get(sk);
@@ -508,7 +514,7 @@ out:
 	return ret;
 }
 
-static inline void sock_valbool_flag(struct sock *sk, int bit, int valbool)
+void sock_valbool_flag(struct sock *sk, int bit, int valbool)
 {
 	if (valbool)
 		sock_set_flag(sk, bit);
@@ -1061,7 +1067,7 @@ lenout:
  *
  * (We also register the sk_lock with the lock validator.)
  */
-static inline void sock_lock_init(struct sock *sk)
+void sock_lock_init(struct sock *sk)
 {
 	sock_lock_init_class_and_name(sk,
 			af_family_slock_key_strings[sk->sk_family],
@@ -1091,6 +1097,20 @@ static void sock_copy(struct sock *nsk, const struct sock *osk)
 #endif
 }
 
+/*
+ * caches using SLAB_DESTROY_BY_RCU should let .next pointer from nulls nodes
+ * un-modified. Special care is taken when initializing object to zero.
+ */
+/*
+static inline void sk_prot_clear_nulls(struct sock *sk, int size)
+{
+	if (offsetof(struct sock, sk_node.next) != 0)
+		memset(sk, 0, offsetof(struct sock, sk_node.next));
+	memset(&sk->sk_node.pprev, 0,
+	       size - offsetof(struct sock, sk_node.pprev));
+}
+*/
+
 void sk_prot_clear_portaddr_nulls(struct sock *sk, int size)
 {
 	unsigned long nulls1, nulls2;
@@ -1109,7 +1129,7 @@ void sk_prot_clear_portaddr_nulls(struct sock *sk, int size)
 }
 EXPORT_SYMBOL(sk_prot_clear_portaddr_nulls);
 
-static struct sock *sk_prot_alloc(struct proto *prot, gfp_t priority,
+struct sock *sk_prot_alloc(struct proto *prot, gfp_t priority,
 		int family)
 {
 	struct sock *sk;
@@ -1406,6 +1426,19 @@ void sk_setup_caps(struct sock *sk, struct dst_entry *dst)
 	}
 }
 EXPORT_SYMBOL_GPL(sk_setup_caps);
+
+void __init sk_init(void)
+{
+	if (totalram_pages <= 4096) {
+		sysctl_wmem_max = 32767;
+		sysctl_rmem_max = 32767;
+		sysctl_wmem_default = 32767;
+		sysctl_rmem_default = 32767;
+	} else if (totalram_pages >= 131072) {
+		sysctl_wmem_max = 131071;
+		sysctl_rmem_max = 131071;
+	}
+}
 
 /*
  *	Simple resource managers for sockets.
@@ -1977,7 +2010,7 @@ static void sock_def_wakeup(struct sock *sk)
 	rcu_read_unlock();
 }
 
-static void sock_def_error_report(struct sock *sk)
+void sock_def_error_report(struct sock *sk)
 {
 	struct socket_wq *wq;
 

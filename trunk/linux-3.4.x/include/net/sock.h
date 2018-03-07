@@ -347,6 +347,7 @@ struct sock {
 	const struct cred	*sk_peer_cred;
 	long			sk_rcvtimeo;
 	long			sk_sndtimeo;
+	void			*sk_protinfo;
 	struct timer_list	sk_timer;
 	ktime_t			sk_stamp;
 	struct socket		*sk_socket;
@@ -487,7 +488,7 @@ static __always_inline void sock_hold(struct sock *sk)
 /* Ungrab socket in the context, which assumes that socket refcnt
    cannot hit zero, f.e. it is true in context of any socketcall.
  */
-static __always_inline void __sock_put(struct sock *sk)
+static inline void __sock_put(struct sock *sk)
 {
 	atomic_dec(&sk->sk_refcnt);
 }
@@ -693,17 +694,15 @@ static inline void __sk_add_backlog(struct sock *sk, struct sk_buff *skb)
  * Do not take into account this skb truesize,
  * to allow even a single big packet to come.
  */
-static inline bool sk_rcvqueues_full(const struct sock *sk, const struct sk_buff *skb,
-				     unsigned int limit)
+static inline bool sk_rcvqueues_full(const struct sock *sk, const struct sk_buff *skb, unsigned int limit)
 {
 	unsigned int qsize = sk->sk_backlog.len + atomic_read(&sk->sk_rmem_alloc);
 
-	return qsize > limit;
+	return qsize > sk->sk_rcvbuf;
 }
 
 /* The per-socket spinlock must be held here. */
-static inline __must_check int sk_add_backlog(struct sock *sk, struct sk_buff *skb,
-					      unsigned int limit)
+static inline __must_check int sk_add_backlog(struct sock *sk, struct sk_buff *skb, unsigned int limit)
 {
 	if (sk_rcvqueues_full(sk, skb, limit))
 		return -ENOBUFS;
@@ -778,6 +777,16 @@ extern int sk_stream_wait_memory(struct sock *sk, long *timeo_p);
 extern void sk_stream_wait_close(struct sock *sk, long timeo_p);
 extern int sk_stream_error(struct sock *sk, int flags, int err);
 extern void sk_stream_kill_queues(struct sock *sk);
+
+/* START - needed for MPTCP */
+extern void sock_def_error_report(struct sock *sk);
+extern struct sock *sk_prot_alloc(struct proto *prot, gfp_t priority,
+				  int family);
+extern void sock_lock_init(struct sock *sk);
+
+extern struct lock_class_key af_callback_keys[AF_MAX];
+extern char *const af_family_clock_key_strings[AF_MAX+1];
+/* END - needed for MPTCP */
 
 extern int sk_wait_data(struct sock *sk, long *timeo, const struct sk_buff *skb);
 
@@ -950,7 +959,7 @@ static inline void sk_refcnt_debug_dec(struct sock *sk)
 	       sk->sk_prot->name, sk, atomic_read(&sk->sk_prot->socks));
 }
 
-static inline void sk_refcnt_debug_release(const struct sock *sk)
+inline void sk_refcnt_debug_release(const struct sock *sk)
 {
 	if (atomic_read(&sk->sk_refcnt) != 1)
 		printk(KERN_DEBUG "Destruction of the %s socket %p delayed, refcnt=%d\n",
@@ -1638,6 +1647,8 @@ sk_dst_get(struct sock *sk)
 	return dst;
 }
 
+extern void sk_reset_txq(struct sock *sk);
+
 static inline void dst_negative_advice(struct sock *sk)
 {
 	struct dst_entry *ndst, *dst = __sk_dst_get(sk);
@@ -1647,6 +1658,7 @@ static inline void dst_negative_advice(struct sock *sk)
 
 		if (ndst != dst) {
 			rcu_assign_pointer(sk->sk_dst_cache, ndst);
+			//sk_reset_txq(sk);
 			sk_tx_queue_clear(sk);
 		}
 	}
@@ -2162,6 +2174,8 @@ extern int net_msg_warn;
 
 extern __u32 sysctl_wmem_max;
 extern __u32 sysctl_rmem_max;
+
+extern void sk_init(void);
 
 extern int sysctl_optmem_max;
 
