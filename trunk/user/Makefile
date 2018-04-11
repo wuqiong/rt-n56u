@@ -148,6 +148,8 @@ endif
 dir_y						+= mtd-utils
 endif
 
+dir_y						+= minivtun
+
 all:
 	for i in $(dir_y) ; do \
 		[ ! -d $$i ] || \

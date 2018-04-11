@@ -1,19 +1,39 @@
+SRC_NAME=minivtun-git/src
 
-CFLAGS += -Wall
-HEADERS = minivtun.h library.h list.h jhash.h
+CFLAGS += -ffunction-sections -fdata-sections
+LDFLAGS += -Wl,--gc-sections
 
-minivtun: minivtun.o library.o server.o client.o
-	$(CC) $(LDFLAGS) -o $@ $^ -lcrypto
-	$(STRIP) $@
+THISDIR = $(shell pwd)
 
-%.o: %.c $(HEADERS)
-	$(CC) $(CFLAGS) -c -o $@ $<
+all:	config_test
+	$(MAKE) -C $(SRC_NAME)
 
-install: minivtun
-	cp -f minivtun $(PREFIX)/sbin/
+config_test:
+	( if [ -f ./config_done ]; then \
+		echo "the same configuration"; \
+	else \
+		make configure && touch config_done; \
+	fi )
+
+
+download:
+	( if [ -d ./minivtun-git ]; then \
+		echo "minivtun exist"; \
+	else \
+		git clone https://github.com/rssnsj/minivtun.git minivtun-git; \
+	fi )
+
+
+configure:
+	make download;
+
 
 clean:
-	rm -f minivtun *.o
+	if [ -f $(SRC_NAME)/Makefile ] ; then \
+		$(MAKE) -C $(SRC_NAME) distclean ; \
+	fi ; \
+	rm -f config_done
 
 romfs:
-	$(ROMFSINST) /usr/sbin/minivtun
+	$(ROMFSINST) $(THISDIR)/$(SRC_NAME)/minivtun  /usr/sbin/minivtun
+
