@@ -278,7 +278,7 @@ di_on_timer(void)
 		if (nvram_get_int("front_led_wan") == 3)
 			LED_CONTROL(BOARD_GPIO_LED_WAN, (link_internet) ? LED_ON : LED_OFF);
 #endif
-		if (di_poll_mode != 0 && !di_pause_received) {
+		if (di_poll_mode /*!*/>= 0 && !di_pause_received) {
 			long fail_delay = (long)nvram_safe_get_int("di_lost_delay", 10, 0, 600);
 			
 			if (link_internet || fail_delay == 0) {

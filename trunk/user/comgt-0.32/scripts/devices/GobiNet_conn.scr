@@ -16,6 +16,8 @@ opengt
 
 :ready
  let $x=$rpipe("nvram get modem_apn")
+ send "AT$NDISDIAL=0,1\r\n"
+ waitquiet 1 0.2
  send "AT$NDISDIAL=1,1,\""+$x+"\"\r\n"
  waitfor 5 "OK","ERR","ERROR","+CME ERROR","COMMAND NOT SUPPORT"
  goto dialok

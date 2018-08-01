@@ -88,6 +88,7 @@ romfs:
 	cd $(INSTALLDIR)/sbin && ln -sf rc ntpc_updated
 	cd $(INSTALLDIR)/sbin && ln -sf rc start_ddns
 	cd $(INSTALLDIR)/sbin && ln -sf rc restart_dns
+	cd $(INSTALLDIR)/sbin && ln -sf rc restart_dnsproxy
 	cd $(INSTALLDIR)/sbin && ln -sf rc restart_dhcpd
 	cd $(INSTALLDIR)/sbin && ln -sf rc restart_vpn_server
 	cd $(INSTALLDIR)/sbin && ln -sf rc restart_vpn_client

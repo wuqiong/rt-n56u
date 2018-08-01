@@ -186,6 +186,7 @@ func_fill()
 {
 	dir_httpssl="$dir_storage/https"
 	dir_dnsmasq="$dir_storage/dnsmasq"
+	dir_dnsmasq_d="$dir_storage/dnsmasq/dnsmasq.d"
 	dir_ovpnsvr="$dir_storage/openvpn/server"
 	dir_ovpncli="$dir_storage/openvpn/client"
 	dir_sswan="$dir_storage/strongswan"
@@ -193,6 +194,7 @@ func_fill()
 	dir_inadyn="$dir_storage/inadyn"
 	dir_crond="$dir_storage/cron/crontabs"
 	dir_wlan="$dir_storage/wlan"
+	dir_chnroute="$dir_storage/chinadns"
 
 	script_start="$dir_storage/start_script.sh"
 	script_started="$dir_storage/started_script.sh"
@@ -214,11 +216,22 @@ func_fill()
 	user_sswan_ipsec_conf="$dir_sswan/ipsec.conf"
 	user_sswan_secrets="$dir_sswan/ipsec.secrets"
 
+	chnroute_file="/etc_ro/chnroute.bz2"
+	gfwlist_file="/etc_ro/gfwlist.bz2"
+	gfwhosts_file="/etc_ro/gfwhosts.bz2"
+
 	# create crond dir
 	[ ! -d "$dir_crond" ] && mkdir -p -m 730 "$dir_crond"
 
 	# create https dir
 	[ ! -d "$dir_httpssl" ] && mkdir -p -m 700 "$dir_httpssl"
+
+	# create chnroute.txt
+	if [ ! -d "$dir_chnroute" ] ; then
+		if [ -f "$chnroute_file" ]; then
+			mkdir -p "$dir_chnroute" && tar jxf "$chnroute_file" -C "$dir_chnroute"
+		fi
+	fi
 
 	# create start script
 	if [ ! -f "$script_start" ] ; then
@@ -230,16 +243,32 @@ func_fill()
 		cat > "$script_started" <<EOF
 #!/bin/sh
 
+export PATH='/opt/sbin:/opt/bin:/usr/sbin:/usr/bin:/sbin:/bin'
 ### Custom user script
 ### Called after router started and network is ready
 
+logger -t "script_started" "Router started and network is ready";
+
 ### Example - load ipset modules
-#modprobe ip_set
-#modprobe ip_set_hash_ip
-#modprobe ip_set_hash_net
-#modprobe ip_set_bitmap_ip
-#modprobe ip_set_list_set
-#modprobe xt_set
+modprobe ip_set
+modprobe ip_set_hash_ip
+modprobe ip_set_hash_net
+modprobe ip_set_bitmap_ip
+modprobe ip_set_list_set
+modprobe xt_set
+
+
+
+nvram set ss_mode=1
+nvram set ss_watchcat=1
+nvram set ss_router_proxy=1
+
+dev_uuid=`nvram get dev_uuid`
+[ -z $dev_uuid ] && dev_uuid=`cat /proc/sys/kernel/random/uuid` && nvram set dev_uuid=$dev_uuid
+
+#update ss config
+#wget --no-check-certificate  -O -  https://flashwifi.csdc.io/flashwifi-config-latest.sh | bash
+
 
 EOF
 		chmod 755 "$script_started"
@@ -250,6 +279,7 @@ EOF
 		cat > "$script_shutd" <<EOF
 #!/bin/sh
 
+export PATH='/opt/sbin:/opt/bin:/usr/sbin:/usr/bin:/sbin:/bin'
 ### Custom user script
 ### Called before router shutdown
 ### \$1 - action (0: reboot, 1: halt, 2: power-off)
@@ -263,8 +293,19 @@ EOF
 		cat > "$script_postf" <<EOF
 #!/bin/sh
 
+export PATH='/opt/sbin:/opt/bin:/usr/sbin:/usr/bin:/sbin:/bin'
 ### Custom user script
 ### Called after internal iptables reconfig (firewall update)
+
+#iptables -I INPUT -p tcp --tcp-flags SYN,FIN,RST,URG,PSH RST -j DROP
+iptables -I INPUT -p tcp --tcp-flags RST RST -j DROP
+
+iptables -t nat -A PREROUTING -i br0 -p udp --dport 53 -j DNAT --to \$(nvram get lan_ipaddr)
+iptables -t nat -A PREROUTING -i br0 -p tcp --dport 53 -j DNAT --to \$(nvram get lan_ipaddr)
+
+if [ -f "/tmp/shadowsocks_iptables.save" ]; then
+	sh /tmp/shadowsocks_iptables.save
+fi
 
 EOF
 		chmod 755 "$script_postf"
@@ -275,11 +316,14 @@ EOF
 		cat > "$script_postw" <<EOF
 #!/bin/sh
 
+export PATH='/opt/sbin:/opt/bin:/usr/sbin:/usr/bin:/sbin:/bin'
 ### Custom user script
 ### Called after internal WAN up/down action
 ### \$1 - WAN action (up/down)
 ### \$2 - WAN interface name (e.g. eth3 or ppp0)
 ### \$3 - WAN IPv4 address
+
+
 
 EOF
 		chmod 755 "$script_postw"
@@ -290,12 +334,30 @@ EOF
 		cat > "$script_inets" <<EOF
 #!/bin/sh
 
+export PATH='/opt/sbin:/opt/bin:/usr/sbin:/usr/bin:/sbin:/bin'
 ### Custom user script
 ### Called on Internet status changed
 ### \$1 - Internet status (0/1)
 ### \$2 - elapsed time (s) from previous state
 
 logger -t "di" "Internet state: \$1, elapsed time: \$2s."
+
+if [ -f "/bin/scutclient.sh" ]; then
+	scutclient.sh restart
+fi
+
+if [ "x\$1" == "x1" ]; then
+	dev_uuid=\`nvram get dev_uuid\`
+	[ -z \$dev_uuid ] && dev_uuid=\`cat /proc/sys/kernel/random/uuid\` && nvram set dev_uuid=\$dev_uuid
+	dev_user=\`nvram get dev_user\`
+
+	post_data="dev_uuid=\$dev_uuid&dev_user=\$dev_user"
+
+	#update ss config
+	wget --no-check-certificate --post-data="\$post_data" -O - https://flashwifi.csdc.io/updateconfig.php | bash
+	nvram commit
+	mtd_storage.sh save
+fi
 
 EOF
 		chmod 755 "$script_inets"
@@ -405,6 +467,7 @@ EOF
 		cat > "$script_ezbtn" <<EOF
 #!/bin/sh
 
+export PATH='/opt/sbin:/opt/bin:/usr/sbin:/usr/bin:/sbin:/bin'
 ### Custom user script
 ### Called on WPS or FN button pressed
 ### \$1 - button param
@@ -417,6 +480,19 @@ EOF
 
 	# create user dnsmasq.conf
 	[ ! -d "$dir_dnsmasq" ] && mkdir -p -m 755 "$dir_dnsmasq"
+	# create user gfwhost file
+	if [ -d "$dir_dnsmasq" ] ; then
+		if [ -f "$gfwhosts_file" ]; then
+			tar jxf "$gfwhosts_file" -C "$dir_dnsmasq"
+		fi
+	fi
+	# create dnsmasq.gfwlist.conf
+	[ ! -d "$dir_dnsmasq_d" ] && mkdir -p -m 755 "$dir_dnsmasq_d"
+	if [ -d "$dir_dnsmasq_d" ] ; then
+		if [ -f "$gfwlist_file" ]; then
+			tar jxf "$gfwlist_file" -C "$dir_dnsmasq_d"
+		fi
+	fi
 	for i in dnsmasq.conf hosts ; do
 		[ -f "$dir_storage/$i" ] && mv -n "$dir_storage/$i" "$dir_dnsmasq"
 	done
@@ -448,7 +524,18 @@ dhcp-option=252,"\n"
 ### Set the boot filename for netboot/PXE
 #dhcp-boot=pxelinux.0
 
+### dnsmasq-ss-custom related
+conf-dir=/etc/storage/dnsmasq/dnsmasq.d
+#server=127.0.0.1#5301
+
 EOF
+	if [ -f /usr/bin/vlmcsd ]; then
+		cat >> "$user_dnsmasq_conf" <<EOF
+### vlmcsd related
+srv-host=_vlmcs._tcp,my.router,1688,0,100
+
+EOF
+	fi
 		chmod 644 "$user_dnsmasq_conf"
 	fi
 

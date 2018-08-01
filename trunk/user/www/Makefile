@@ -164,6 +164,16 @@ ifneq ($(STORAGE_ENABLED),y)
 	rm -rf $(INSTALLDIR)/www/images/AiDisk
 	rm -rf $(INSTALLDIR)/www/images/Tree
 endif
+ifneq ($(CONFIG_FIRMWARE_INCLUDE_SCUT_MOD),y)
+	rm -f $(INSTALLDIR)/www/scutclient.asp
+	rm -f $(INSTALLDIR)/www/scutclient_log.asp
+	rm -f $(INSTALLDIR)/www/scutclient_action.asp
+endif
+ifneq ($(CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS),y)
+	rm -f $(INSTALLDIR)/www/Shadowsocks.asp
+	rm -f $(INSTALLDIR)/www/Shadowsocks_action.asp
+	rm -f $(INSTALLDIR)/www/Shadowsocks_log.asp
+endif
 
 clean:
 	@echo "Clean www romfs"

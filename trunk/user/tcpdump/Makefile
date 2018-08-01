@@ -1,5 +1,5 @@
 SRC_NAME=tcpdump-4.4.0
-
+THISDIR=$(shell pwd)
 CFLAGS += -Os -ffunction-sections -fdata-sections -DTCPDUMP_MINI
 LDFLAGS += -Wl,--gc-sections
 
@@ -16,7 +16,7 @@ configure:
 	( cd $(SRC_NAME) ; \
 	ac_cv_linux_vers=3 \
 	ac_cv_lib_rpc_main=no \
-	ac_cv_path_PCAP_CONFIG="" \
+	ac_cv_path_PCAP_CONFIG="$(STAGEDIR)/bin/pcap-config" \
 	td_cv_buggygetaddrinfo=no \
 	./configure \
 		--prefix=/usr \

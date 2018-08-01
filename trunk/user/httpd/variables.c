@@ -126,6 +126,15 @@
 #if defined (USE_NAND_FLASH)
 			{"mtd_rwfs_mount", "", NULL, FALSE},
 #endif
+#if defined (APP_TTYD)
+			{"ttyd_enable", "", NULL, EVM_RESTART_TTYD},
+#endif
+#if defined (APP_VLMCSD)
+			{"vlmcsd_enable", "", NULL, EVM_RESTART_VLMCSD},
+#endif
+#if defined (APP_NAPT66)
+			{"napt66_enable", "", NULL, FALSE},
+#endif
 			{"http_username", "", NULL, EVM_RESTART_CROND|EVM_BLOCK_UNSAFE},
 			{"http_passwd", "", NULL, EVM_BLOCK_UNSAFE},
 			{"modem_rule", "", NULL, EVM_RESTART_MODEM},
@@ -757,6 +766,50 @@
 #endif
 			{0,0,0,0}
 		};
+		
+#if defined (APP_SCUT)
+	struct variable variables_ScutclientConf[] = {
+			{"scutclient_enable", "",NULL, EVM_RESTART_SCUT},
+			{"scutclient_debug","",NULL,EVM_RESTART_SCUT },
+			{"scutclient_username","",NULL,EVM_RESTART_SCUT },
+			{"scutclient_password","",NULL,EVM_RESTART_SCUT },
+			{"scutclient_server_auth_ip","",NULL,EVM_RESTART_SCUT },
+			{"scutclient_version","",NULL,EVM_RESTART_SCUT },
+			{"scutclient_hash","",NULL,EVM_RESTART_SCUT },
+			{"scutclient_hostname","",NULL,EVM_RESTART_SCUT },
+			{"scutclient_done","",NULL,EVM_RESTART_SCUT },
+			{"scutclient_watchcat","",NULL,FALSE},
+			{0,0,0,0}
+	};
+#endif
+
+
+#if defined(APP_SHADOWSOCKS)
+	struct variable variables_ShadowsocksConf[] = {
+			{"ss_enable","",NULL, EVM_RESTART_SHADOWSOCKS},
+			{"ss_mode","",NULL, EVM_RESTART_SHADOWSOCKS},
+			{"ss_server","",NULL, EVM_RESTART_SHADOWSOCKS},
+			{"ss_server_port","",NULL, EVM_RESTART_SHADOWSOCKS},
+			{"ss_key","",NULL, EVM_RESTART_SHADOWSOCKS},
+			{"ss_method","",NULL, EVM_RESTART_SHADOWSOCKS},
+			{"ss_udp","",NULL, EVM_RESTART_SHADOWSOCKS},
+			{"ss_local_port","",NULL, EVM_RESTART_SHADOWSOCKS},
+			{"ss_mtu","",NULL, EVM_RESTART_SHADOWSOCKS},
+			{"ss_router_proxy","",NULL, EVM_RESTART_SHADOWSOCKS},
+			{"ss_lower_port_only","",NULL, EVM_RESTART_SHADOWSOCKS},
+			{"ss_timeout","",NULL, EVM_RESTART_SHADOWSOCKS},
+			{"ss_protocol","",NULL, EVM_RESTART_SHADOWSOCKS},
+			{"ss_proto_param","",NULL, EVM_RESTART_SHADOWSOCKS},
+			{"ss_obfs","",NULL, EVM_RESTART_SHADOWSOCKS},
+			{"ss_obfs_param","",NULL, EVM_RESTART_SHADOWSOCKS},
+			{"ss_watchcat","",NULL, FALSE},
+			{"ss-tunnel_enable","",NULL, EVM_RESTART_SS_TUNNEL},
+			{"ss-tunnel_local_port","",NULL, EVM_RESTART_SS_TUNNEL},
+			{"ss-tunnel_remote","",NULL, EVM_RESTART_SS_TUNNEL},
+			{"ss-tunnel_mtu","",NULL, EVM_RESTART_SS_TUNNEL},
+			{0,0,0,0}
+	};
+#endif
 
 	struct variable variables_WLANConfig11b[] = {
 			{"rt_ssid", "", NULL, EVM_RESTART_WIFI2},
@@ -861,6 +914,12 @@
 		{"DeviceSecurity11b",		variables_DeviceSecurity11b},
 		{"WLANAuthentication11a",	variables_WLANAuthentication11a},
 		{"WLANAuthentication11b",	variables_WLANAuthentication11b},
+#if defined(APP_SCUT)
+		{"ScutclientConf",		variables_ScutclientConf},
+#endif
+#if defined(APP_SHADOWSOCKS)
+		{"ShadowsocksConf",		variables_ShadowsocksConf},
+#endif
 		{"LANGUAGE",			variables_Language},
 		{0,0}
 	};
@@ -880,6 +939,7 @@
 		{EVM_RESTART_HTTPD,		EVT_RESTART_HTTPD,		RCN_RESTART_HTTPD,	EVM_RESTART_FIREWALL},
 		{EVM_RESTART_SSHD,		EVT_RESTART_SSHD,		RCN_RESTART_SSHD,	EVM_RESTART_FIREWALL},
 		{EVM_RESTART_TELNETD,		EVT_RESTART_TELNETD,		RCN_RESTART_TELNETD,	0},
+
 #if defined(APP_SMBD) || defined(APP_NMBD)
 		{EVM_RESTART_WINS,		EVT_RESTART_WINS,		RCN_RESTART_WINS,	EVM_RESTART_DHCPD|EVM_RESTART_NMBD|EVM_REAPPLY_VPNSVR},
 #endif
@@ -923,6 +983,19 @@
 #if defined(APP_ARIA)
 		{EVM_RESTART_ARIA,		EVT_RESTART_ARIA,		RCN_RESTART_ARIA,	EVM_RESTART_FIREWALL},
 #endif
+#endif
+#if defined(APP_SCUT)
+		{EVM_RESTART_SCUT,		EVT_RESTART_SCUT,		RCN_RESTART_SCUT,	0},
+#endif
+#if defined(APP_TTYD)
+		{EVM_RESTART_TTYD,		EVT_RESTART_TTYD,		RCN_RESTART_TTYD,	0},
+#endif
+#if defined(APP_VLMCSD)
+		{EVM_RESTART_VLMCSD,	EVT_RESTART_VLMCSD,		RCN_RESTART_VLMCSD,	0},
+#endif
+#if defined(APP_SHADOWSOCKS)
+		{EVM_RESTART_SHADOWSOCKS,	EVT_RESTART_SHADOWSOCKS,	RCN_RESTART_SHADOWSOCKS,  0},
+		{EVM_RESTART_SS_TUNNEL,		EVT_RESTART_SS_TUNNEL,		RCN_RESTART_SS_TUNNEL,	  0},
 #endif
 #if defined(APP_SMBD) || defined(APP_NMBD)
 		{EVM_RESTART_NMBD,		EVT_RESTART_NMBD,		RCN_RESTART_NMBD,	0},

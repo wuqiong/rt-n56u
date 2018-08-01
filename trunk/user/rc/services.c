@@ -233,6 +233,125 @@ restart_sshd(void)
 }
 #endif
 
+#if defined(APP_SCUT)
+int is_scutclient_run(void)
+{
+	if(pids("bin_scutclient"))
+		return 1;
+	return 0;
+}
+void stop_scutclient(void)
+{
+	eval("/bin/scutclient.sh","stop");
+}
+
+void start_scutclient(void)
+{
+	int scutclient_mode = nvram_get_int("scutclient_enable");
+	//logmessage(LOGNAME, "scutclient RC start!");
+	if ( scutclient_mode == 1 )
+		eval("/bin/scutclient.sh","start");
+}
+
+void restart_scutclient(void)
+{
+	int scutclient_mode = nvram_get_int("scutclient_enable");
+	//logmessage(LOGNAME, "scutclient RC restart!");
+	if ( scutclient_mode == 1 )
+		eval("/bin/scutclient.sh","restart");
+}
+#endif
+
+#if defined(APP_TTYD)
+void stop_ttyd(void){
+	eval("/usr/bin/ttyd.sh","stop");
+}
+
+void start_ttyd(void){
+	int ttyd_mode = nvram_get_int("ttyd_enable");
+	if ( ttyd_mode == 1)
+		eval("/usr/bin/ttyd.sh","start");
+}
+
+void restart_ttyd(void){
+	stop_ttyd();
+	start_ttyd();
+}
+#endif
+
+#if defined(APP_SHADOWSOCKS)
+void stop_ss(void){
+	eval("/usr/bin/shadowsocks.sh","stop");
+}
+
+void start_ss(void){
+	int ss_mode = nvram_get_int("ss_enable");
+	if ( ss_mode == 1)
+		eval("/usr/bin/shadowsocks.sh","start");
+}
+
+void restart_ss(void){
+	stop_ss();
+	start_ss();
+}
+
+void stop_ss_tunnel(void){
+	eval("/usr/bin/ss-tunnel.sh","stop");
+}
+
+void start_ss_tunnel(void){
+	int ss_tunnel_mode = nvram_get_int("ss-tunnel_enable");
+	if ( ss_tunnel_mode == 1)
+		eval("/usr/bin/ss-tunnel.sh","start");
+}
+
+void restart_ss_tunnel(void){
+	stop_ss_tunnel();
+	start_ss_tunnel();
+}
+
+#endif
+
+#if defined(APP_VLMCSD)
+void stop_vlmcsd(void){
+	eval("/usr/bin/vlmcsd.sh","stop");
+}
+
+void start_vlmcsd(void){
+	int vlmcsd_mode = nvram_get_int("vlmcsd_enable");
+	if ( vlmcsd_mode == 1)
+		eval("/usr/bin/vlmcsd.sh","start");
+}
+
+void restart_vlmcsd(void){
+	stop_vlmcsd();
+	start_vlmcsd();
+}
+#endif
+
+#if defined(APP_DNSPROXY)
+void stop_dnsproxy(void){
+	eval("/usr/bin/dnsproxy.sh","stop");
+}
+
+void start_dnsproxy(void){
+	eval("/usr/bin/dnsproxy.sh","start");
+}
+
+void restart_dnsproxy(void){
+	stop_dnsproxy();
+	start_dnsproxy();
+}
+#endif
+
+#if defined(APP_NAPT66)
+void start_napt66(void){
+	int napt66_mode = nvram_get_int("napt66_enable");
+	if ( napt66_mode == 1)
+		eval("/bin/start_napt66");
+}
+#endif
+
 void
 start_httpd(int restart_fw)
 {
@@ -431,6 +550,25 @@ start_services_once(int is_ap_mode)
 #endif
 	}
 
+#if defined(APP_SCUT)
+	start_scutclient();
+#endif
+#if defined(APP_NAPT66)
+	start_napt66();
+#endif
+#if defined(APP_DNSPROXY)
+	start_dnsproxy();
+#endif
+#if defined(APP_SHADOWSOCKS)
+	start_ss();
+	start_ss_tunnel();
+#endif
+#if defined(APP_TTYD)
+	start_ttyd();
+#endif
+#if defined(APP_VLMCSD)
+	start_vlmcsd();
+#endif
 	start_lltd();
 	start_watchdog_cpu();
 	start_crond();
@@ -459,6 +597,12 @@ stop_services(int stopall)
 #if defined (SRV_U2EC)
 	stop_u2ec();
 #endif
+#endif
+#if defined(APP_SCUT)
+	stop_scutclient();
+#endif
+#if defined(APP_TTYD)
+	stop_ttyd();
 #endif
 	stop_networkmap();
 	stop_lltd();

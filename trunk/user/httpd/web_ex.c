@@ -1924,6 +1924,83 @@ wan_action_hook(int eid, webs_t wp, int argc, char **argv)
 	return 0;
 }
 
+#if defined (APP_SCUT)
+static int scutclient_action_hook(int eid, webs_t wp, int argc, char **argv)
+{
+	int needed_seconds = 2;
+	char *scut_action = websGetVar(wp, "connect_action", "");
+
+	if (!strcmp(scut_action, "Reconnect")) {
+		notify_rc(RCN_RESTART_SCUT);
+	}
+	else if (!strcmp(scut_action, "Disconnect")) {
+		notify_rc("stop_scutclient");
+	}
+
+	websWrite(wp, "<script>restart_needed_time(%d);</script>\n", needed_seconds);
+	return 0;
+}
+
+static int scutclient_status_hook(int eid, webs_t wp, int argc, char **argv)
+{
+	int status_code = pids("bin_scutclient");
+	websWrite(wp, "function scutclient_status() { return %d;}\n", status_code);
+	return 0;
+}
+
+static int scutclient_version_hook(int eid, webs_t wp, int argc, char **argv)
+{
+	FILE *fstream = NULL;
+	char ver[8];
+	memset(ver, 0, sizeof(ver));
+	fstream = popen("/usr/bin/bin_scutclient -V","r");
+	if(fstream) {
+		fgets(ver, sizeof(ver), fstream);
+		pclose(fstream);
+		if (strlen(ver) > 0)
+			ver[strlen(ver) - 1] = 0;
+		if (!(ver[0]>='0' && ver[0]<='9'))
+			sprintf(ver, "%s", "unknown");
+	} else {
+		sprintf(ver, "%s", "unknown");
+	}
+	websWrite(wp, "function scutclient_version() { return '%s';}\n", ver);
+	return 0;
+}
+#endif
+
+#if defined (APP_SHADOWSOCKS)
+static int shadowsocks_action_hook(int eid, webs_t wp, int argc, char **argv)
+{
+	int needed_seconds = 3;
+	char *ss_action = websGetVar(wp, "connect_action", "");
+
+	if (!strcmp(ss_action, "Reconnect")) {
+		notify_rc(RCN_RESTART_SHADOWSOCKS);
+	} else if (!strcmp(ss_action, "Reconnect_ss_tunnel")) {
+		notify_rc(RCN_RESTART_SS_TUNNEL);
+	} 
+	websWrite(wp, "<script>restart_needed_time(%d);</script>\n", needed_seconds);
+	return 0;
+}
+
+static int shadowsocks_status_hook(int eid, webs_t wp, int argc, char **argv)
+{
+	int ss_status_code = pids("ss-redir");
+	websWrite(wp, "function shadowsocks_status() { return %d;}\n", ss_status_code);
+	int ss_tunnel_status_code = pids("ss-local");
+	websWrite(wp, "function shadowsocks_tunnel_status() { return %d;}\n", ss_tunnel_status_code);
+	return 0;
+}
+
+static int rules_count_hook(int eid, webs_t wp, int argc, char **argv)
+{
+	return 0;
+}
+
+#endif
+
+
 static int
 ej_detect_internet_hook(int eid, webs_t wp, int argc, char **argv)
 {
@@ -2078,6 +2155,31 @@ ej_firmware_caps_hook(int eid, webs_t wp, int argc, char **argv)
 #else
 	int found_app_sshd = 0;
 #endif
+#if defined(APP_SCUT)
+	int found_app_scutclient = 1;
+#else
+	int found_app_scutclient = 0;
+#endif
+#if defined(APP_TTYD)
+	int found_app_ttyd = 1;
+#else
+	int found_app_ttyd = 0;
+#endif
+#if defined(APP_VLMCSD)
+	int found_app_vlmcsd = 1;
+#else
+	int found_app_vlmcsd = 0;
+#endif
+#if defined(APP_NAPT66)
+	int found_app_napt66 = 1;
+#else
+	int found_app_napt66 = 0;
+#endif
+#if defined(APP_SHADOWSOCKS)
+	int found_app_shadowsocks = 1;
+#else
+	int found_app_shadowsocks = 0;
+#endif
 #if defined(APP_XUPNPD)
 	int found_app_xupnpd = 1;
 #else
@@ -2204,6 +2306,11 @@ ej_firmware_caps_hook(int eid, webs_t wp, int argc, char **argv)
 		"function found_srv_u2ec() { return %d;}\n"
 		"function found_srv_lprd() { return %d;}\n"
 		"function found_app_sshd() { return %d;}\n"
+		"function found_app_scutclient() { return %d;}\n"
+		"function found_app_ttyd() { return %d;}\n"
+		"function found_app_vlmcsd() { return %d;}\n"
+		"function found_app_napt66() { return %d;}\n"
+		"function found_app_shadowsocks() { return %d;}\n"
 		"function found_app_xupnpd() { return %d;}\n",
 		found_utl_hdparm,
 		found_app_ovpn,
@@ -2219,6 +2326,11 @@ ej_firmware_caps_hook(int eid, webs_t wp, int argc, char **argv)
 		found_srv_u2ec,
 		found_srv_lprd,
 		found_app_sshd,
+		found_app_scutclient,
+		found_app_ttyd,
+		found_app_vlmcsd,
+		found_app_napt66,
+		found_app_shadowsocks,
 		found_app_xupnpd
 	);
 
@@ -3529,6 +3641,9 @@ struct mime_handler mime_handlers[] = {
 #if defined(APP_ARIA)
 	/* cached font */
 	{ "**.woff", "application/font-woff", NULL, NULL, do_file, 0 }, // 2016.01 Volt1
+	{ "**.woff2", "application/font-woff", NULL, NULL, do_file, 0 },
+	{ "**.txt", "text/plain", NULL, NULL, do_file, 0 },
+	{ "**.manifest", "text/plain", NULL, NULL, do_file, 0 },
 #endif
 
 	/* cached images */
@@ -3836,6 +3951,16 @@ struct ej_handler ej_handlers[] =
 	{ "delete_sharedfolder", ej_delete_sharedfolder},
 	{ "modify_sharedfolder", ej_modify_sharedfolder},
 	{ "set_share_mode", ej_set_share_mode},
+#endif
+#if defined (APP_SCUT)
+	{ "scutclient_action", scutclient_action_hook},
+	{ "scutclient_status", scutclient_status_hook},
+	{ "scutclient_version", scutclient_version_hook},
+#endif
+#if defined (APP_SHADOWSOCKS)
+	{ "shadowsocks_action", shadowsocks_action_hook},
+	{ "shadowsocks_status", shadowsocks_status_hook},
+	{ "rules_count", rules_count_hook},
 #endif
 	{ "openssl_util_hook", openssl_util_hook},
 	{ "openvpn_srv_cert_hook", openvpn_srv_cert_hook},

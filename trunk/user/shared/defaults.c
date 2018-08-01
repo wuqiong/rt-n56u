@@ -467,6 +467,55 @@ struct nvram_pair router_defaults[] = {
 	{ "dr_staticnetmask_x", "0" },
 	{ "dr_staticgateway_x", "" },
 
+	/* scutclient related */
+	{ "scutclient_enable", "0" },
+	{ "scutclient_debug", "0" },
+	{ "scutclient_hostname", "PC" },
+	{ "scutclient_server_auth_ip", "" },
+	{ "scutclient_version", "4472434f4d0096022a" },
+	{ "scutclient_hash", "2ec15ad258aee9604b18f2f8114da38db16efd00" },
+	{ "scutclient_done", "0" },
+	{ "scutclient_username", "" },
+	{ "scutclient_password", "" },
+	{ "scutclient_watchcat", "1" },
+	{ "scutclient_auth_exec", "echo 0 > /tmp/scutclient_status" },
+	{ "scutclient_fail_exec", "echo 1 > /tmp/scutclient_status" },
+
+	/* ttyd related */
+	{ "ttyd_enable", "0" },
+
+	/* NAPT66 */
+	{ "napt66_enable", "0" },
+
+	/* vlmcsd */
+	{ "vlmcsd_enable", "0" },
+
+	/* shadowsocks */
+	{ "ss_enable", "1" },
+	{ "ss_mode", "2" }, 	//0=全局代理,1=绕过大陆[,2=gfwlist]
+	{ "ss_server", "" },
+	{ "ss_server_port", "" },
+	{ "ss_key", "" },
+	{ "ss_method", "" },
+	{ "ss_udp", "0" },
+	{ "ss_local_port", "1080" },
+	{ "ss_mtu", "1492" },
+	{ "ss_router_proxy", "1" },
+	{ "ss_lower_port_only", "1" },		//1:22-1023;2:53,80,443
+	{ "ss_timeout", "60"},
+	{ "ss_protocol", ""},
+	{ "ss_proto_param", ""},
+	{ "ss_obfs", ""},
+	{ "ss_obfs_param", ""},
+
+	{ "ss-tunnel_enable", "0" },
+	{ "ss-tunnel_local_port", "5300" },
+	{ "ss-tunnel_remote", "8.8.4.4:53" },
+	{ "ss-tunnel_mtu", "1492" },
+
+	{ "ss_watchcat", "1" },
+	{ "ss_update_gfwlist", "0" },
+
 	/* DHCP server parameters */
 	{ "dhcp_start", DEF_LAN_DHCP_BEG },	/* First assignable DHCP address */
 	{ "dhcp_end", DEF_LAN_DHCP_END },	/* Last assignable DHCP address */
@@ -511,7 +560,7 @@ struct nvram_pair router_defaults[] = {
 	{ "ddns2_ssl", "1" },
 	{ "asusddns_tos_agreement", "0" },
 
-	{ "preferred_lang", "" },
+	{ "preferred_lang", "CN" },
 
 	{ "modem_rule", "0" },
 	{ "modem_prio", "1" },
@@ -554,7 +603,7 @@ struct nvram_pair router_defaults[] = {
 	{ "di_lost_delay", "10" },
 	{ "di_lost_action", "0" },
 	{ "di_recon_pause", "0" },
-	{ "di_addr0", "77.88.8.8" },
+	{ "di_addr0", "114.114.114.114" },
 	{ "di_addr1", "8.8.8.8" },
 	{ "di_addr2", "208.67.222.222" },
 	{ "di_addr3", "77.88.8.1" },
@@ -580,7 +629,7 @@ struct nvram_pair router_defaults[] = {
 	{ "wins_enable", "0" },
 	{ "lltd_enable", "1" },
 	{ "adsc_enable", "0" },
-	{ "crond_enable", "0" },
+	{ "crond_enable", "1" },
 	{ "crond_log", "0" },
 
 #if defined(BOARD_N65U)
@@ -603,7 +652,7 @@ struct nvram_pair router_defaults[] = {
 	{ "fn2_action_short", "0" },
 	{ "fn2_action_long", "0" },
 #endif
-	{ "watchdog_cpu", "0" },
+	{ "watchdog_cpu", "1" },
 	{ "front_led_all", "1" },
 	{ "front_led_wan", "2" },
 	{ "front_led_lan", "1" },

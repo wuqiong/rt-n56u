@@ -512,6 +512,38 @@ int start_services_once(int is_ap_mode);
 void stop_services(int stopall);
 void stop_services_lan_wan(void);
 void stop_misc(void);
+#if defined(APP_SCUT)
+int is_scutclient_run(void);
+void stop_scutclient(void);
+void start_scutclient(void);
+void restart_scutclient(void);
+#endif
+#if defined(APP_TTYD)
+void stop_ttyd(void);
+void start_ttyd(void);
+void restart_ttyd(void);
+#endif
+#if defined(APP_SHADOWSOCKS)
+void stop_ss(void);
+void start_ss(void);
+void restart_ss(void);
+void stop_ss_tunnel(void);
+void start_ss_tunnel(void);
+void restart_ss_tunnel(void);
+#endif
+#if defined(APP_VLMCSD)
+void stop_vlmcsd(void);
+void start_vlmcsd(void);
+void restart_vlmcsd(void);
+#endif
+#if defined(APP_NAPT66)
+void start_napt66(void);
+#endif
+#if defined(APP_DNSPROXY)
+void stop_dnsproxy(void);
+void start_dnsproxy(void);
+void restart_dnsproxy(void);
+#endif
 
 /* services_ex.c */
 int fill_dnsmasq_servers(void);

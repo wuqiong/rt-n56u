@@ -22,7 +22,11 @@ FS_NTFS_ENABLED=n
 STORAGE_ENABLED=n
 OPENSSH_ENABLED=n
 DROPBEAR_ENABLED=n
+TTYD_ENABLED=n
+HTOP_ENABLE=n
 SAMBA_ENABLED=n
+ARIA2_ENABLED=n
+
 ifneq ($(CONFIG_FIRMWARE_INCLUDE_OPENSSH),y)
 ifeq ($(CONFIG_FIRMWARE_INCLUDE_DROPBEAR),y)
 DROPBEAR_ENABLED=y
@@ -32,6 +36,14 @@ endif
 endif
 else
 OPENSSH_ENABLED=y
+endif
+
+ifeq ($(CONFIG_FIRMWARE_INCLUDE_TTYD),y)
+TTYD_ENABLED=y
+endif
+
+ifeq ($(CONFIG_FIRMWARE_INCLUDE_HTOP),y)
+HTOP_ENABLE=y
 endif
 
 ifeq ($(CONFIG_FIRMWARE_INCLUDE_WINS),y)
@@ -69,6 +81,13 @@ SAMBA_ENABLED=y
 endif
 endif
 
+ifeq ($(CONFIG_FIRMWARE_INCLUDE_ARIA),y)
+ARIA2_ENABLED=y
+endif
+ifeq ($(CONFIG_FIRMWARE_INCLUDE_ARIA2_NEW_PREBUILD_BIN),y)
+ARIA2_ENABLED=y
+endif
+
 dir_y =
 dir_n =
 dir_  =
@@ -91,6 +110,7 @@ dir_y						+= infosvr
 dir_y						+= inadyn
 dir_y						+= miniupnpd
 dir_y						+= dnsmasq
+dir_y						+= dnsproxy
 dir_y						+= igmpproxy
 dir_y						+= udpxy
 dir_y						+= utils
@@ -106,11 +126,26 @@ dir_y						+= lldt
 dir_y						+= scripts
 dir_$(OPENSSH_ENABLED)				+= openssh
 dir_$(DROPBEAR_ENABLED)				+= dropbear
+dir_$(HTOP_ENABLE)					+= htop
+dir_$(CONFIG_FIRMWARE_INCLUDE_NANO)		+= nano
 dir_$(CONFIG_FIRMWARE_INCLUDE_OPENVPN)		+= openvpn
 dir_$(CONFIG_FIRMWARE_INCLUDE_SSWAN)		+= strongswan
 dir_$(CONFIG_FIRMWARE_INCLUDE_XUPNPD)		+= xupnpd
 dir_$(CONFIG_FIRMWARE_INCLUDE_TCPDUMP)		+= tcpdump
 dir_$(SAMBA_ENABLED)				+= samba3
+dir_$(TTYD_ENABLED)					+= ttyd
+dir_$(CONFIG_FIRMWARE_INCLUDE_SCUT_MOD)         += scutclient
+dir_$(CONFIG_FIRMWARE_INCLUDE_VLMCSD)			+= vlmcsd
+dir_$(CONFIG_FIRMWARE_INCLUDE_NAPT66)			+= napt66
+dir_$(CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS)		+= shadowsocks
+dir_$(CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS)		+= chnroute
+dir_$(CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS)		+= gfwlist
+dir_$(CONFIG_FIRMWARE_INCLUDE_LRZSZ)			+= lrzsz
+dir_$(CONFIG_FIRMWARE_INCLUDE_GDUT_DRCOM)		+= gdut-drcom
+dir_$(CONFIG_FIRMWARE_INCLUDE_DOGCOM)			+= dogcom
+dir_$(CONFIG_FIRMWARE_INCLUDE_IPERF)			+= iperf
+dir_$(CONFIG_FIRMWARE_INCLUDE_MINIEAP)			+= minieap
+dir_$(CONFIG_FIRMWARE_INCLUDE_NJIT_CLIENT)		+= njit-client
 
 ifdef CONFIG_BLK_DEV_SD
 dir_$(CONFIG_FIRMWARE_INCLUDE_HDPARM)		+= hdparm
@@ -137,7 +172,7 @@ dir_$(CONFIG_FIRMWARE_INCLUDE_FTPD)		+= vsftpd
 dir_$(CONFIG_FIRMWARE_INCLUDE_MINIDLNA)		+= minidlna
 dir_$(CONFIG_FIRMWARE_INCLUDE_FIREFLY)		+= firefly
 dir_$(CONFIG_FIRMWARE_INCLUDE_TRANSMISSION)	+= transmission
-dir_$(CONFIG_FIRMWARE_INCLUDE_ARIA)		+= aria2
+dir_$(ARIA2_ENABLED)		+= aria2
 endif
 
 ifdef CONFIG_MTD_UBI
@@ -149,6 +184,7 @@ dir_y						+= mtd-utils
 endif
 
 dir_y						+= minivtun
+dir_y						+= ac2ap
 
 all:
 	for i in $(dir_y) ; do \

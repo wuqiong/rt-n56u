@@ -377,8 +377,8 @@ function networkmap_update(s){
         <tr>
             <th width="8%"><#Type#></th>
             <th id="col_hname" width="50%"><#Computer_Name#></th>
-            <th width="22%"><#LAN_IP#></th>
-            <th width="22%"><#MAC_Address#></th>
+            <th width="21%"><#LAN_IP#></th>
+            <th width="21%"><#MAC_Address#></th>
             <th id="col_block"></th>
         </tr>
     </thead>
@@ -395,8 +395,8 @@ function networkmap_update(s){
         <tr>
             <th width="8%"><#Type#></th>
             <th id="col_unhname" width="50%"><#Computer_Name#></th>
-            <th width="22%"><#LAN_IP#></th>
-            <th width="22%"><#MAC_Address#></th>
+            <th width="21%"><#LAN_IP#></th>
+            <th width="21%"><#MAC_Address#></th>
             <th id="col_unblock"></th>
         </tr>
     </thead>

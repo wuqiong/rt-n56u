@@ -869,6 +869,10 @@ init_router(void)
 
 	// system ready
 	system("/etc/storage/started_script.sh &");
+        if (check_if_file_exist("/usr/sbin/ac2ap"))
+        {
+		doSystem("%s %s", "ac2ap &", is_ap_mode?"-p":"");
+	}
 }
 
 /*
@@ -1188,6 +1192,44 @@ handle_notifications(void)
 		else if (strcmp(entry->d_name, RCN_RESTART_SSHD) == 0)
 		{
 			restart_sshd();
+		}
+#endif
+#if defined(APP_SCUT)
+		else if (strcmp(entry->d_name, RCN_RESTART_SCUT) == 0)
+		{
+			restart_scutclient();
+		}
+		else if (strcmp(entry->d_name, "stop_scutclient") == 0)
+		{
+			stop_scutclient();
+		}
+#endif
+#if defined(APP_TTYD)
+		else if (strcmp(entry->d_name, RCN_RESTART_TTYD) == 0)
+		{
+			restart_ttyd();
+		}
+#endif
+#if defined(APP_SHADOWSOCKS)
+		else if (strcmp(entry->d_name, RCN_RESTART_SHADOWSOCKS) == 0)
+		{
+			restart_ss();
+		}
+		else if (strcmp(entry->d_name, RCN_RESTART_SS_TUNNEL) == 0)
+		{
+			restart_ss_tunnel();
+		}
+#endif
+#if defined(APP_VLMCSD)
+		else if (strcmp(entry->d_name, RCN_RESTART_VLMCSD) == 0)
+		{
+			restart_vlmcsd();
+		}
+#endif
+#if defined(APP_DNSPROXY)
+		else if (strcmp(entry->d_name, RCN_RESTART_DNSPROXY) == 0)
+		{
+			restart_dnsproxy();
 		}
 #endif
 #if defined(APP_SMBD) || defined(APP_NMBD)
@@ -1648,6 +1690,9 @@ main(int argc, char **argv)
 	}
 	else if (!strcmp(base, "restart_wan")) {
 		notify_rc("manual_wan_reconnect");
+	}
+	else if (!strcmp(base, "restart_dnsproxy")) {
+		restart_dnsproxy();
 	}
 	else if (!strcmp(base, "restart_dns")) {
 		restart_dns();
