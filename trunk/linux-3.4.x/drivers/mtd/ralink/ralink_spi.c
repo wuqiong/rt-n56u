@@ -29,12 +29,16 @@
 #include <linux/slab.h>
 #include <linux/spi/spi.h>
 #include <linux/spi/flash.h>
+#include <linux/proc_fs.h>
 
 #include <ralink/ralink_gpio.h>
 
 #include "ralink-flash.h"
 #include "ralink-flash-map.h"
 #include "ralink_spi.h"
+
+static u8 flash_uid[12]={0};
+static char PROC_ENTRY_NAME[]="dev_uid";
 
 //#define SPI_DEBUG
 
@@ -54,6 +58,7 @@
 #define OPCODE_SE		0xD8	/* Sector erase */
 #define OPCODE_RES		0xAB	/* Read Electronic Signature */
 #define OPCODE_RDID		0x9F	/* Read JEDEC ID */
+#define OPCODE_UID		0x4B	/* Read Flash Unique ID */
 #define OPCODE_FAST_READ	0x0B	/* Read data bytes */
 #define OPCODE_DOR		0x3B	/* Dual Output Read */
 #define OPCODE_QOR		0x6B	/* Quad Output Read */
@@ -86,7 +91,7 @@
 
 #if defined (CONFIG_RALINK_MT7620)
 
-#define COMMAND_MODE
+//#define COMMAND_MODE
 #define SPI_FIFO_SIZE		16
 
 //#define RD_MODE_FAST		// use Fast Read (0x0B) instead of normal Read
@@ -516,6 +521,26 @@ err_end:
 static int raspi_read_devid(u8 *rxbuf, int n_rx)
 {
 	u8 code = OPCODE_RDID;
+	int retval;
+
+#if defined (COMMAND_MODE)
+	retval = raspi_cmd(code, 0, 0, rxbuf, n_rx, 0, SPIC_READ_BYTES);
+#else
+	retval = spic_read(&code, 1, rxbuf, n_rx);
+#endif
+	if (retval != n_rx) {
+		printk("%s: ret: %x\n", __func__, retval);
+		return retval;
+	}
+	return retval;
+}
+
+/*
+ * read SPI flash unique ID
+ */
+static int raspi_read_uid(u8 *rxbuf, int n_rx)
+{
+	u8 code = OPCODE_UID;
 	int retval;
 
 #if defined (COMMAND_MODE)
@@ -1164,6 +1189,15 @@ struct chip_info *chip_prob(void)
 	return &chips_data[table_size - 1];
 }
 
+static int read_proc_dev_uid(char *buf, char **start, off_t offset, int count, int *eof, void *data)
+{
+	int len = 0;
+	len += sprintf(buf+len, "%02X%02X%02X%02X%02X%02X%02X%02X\n",
+			flash_uid[4],flash_uid[5],flash_uid[6],flash_uid[7],
+			flash_uid[8],flash_uid[9],flash_uid[10],flash_uid[11]);
+	return len;
+}
+
 static int __init raspi_init(void)
 {
 	struct chip_info *chip;
@@ -1252,6 +1286,13 @@ static int __init raspi_init(void)
 		kernel_size = ntohl(hdr.ih_ksz);
 #endif
 
+	raspi_read_uid(flash_uid, 12);
+	printk("Unique-Id : %02X%02X%02X%02X%02X%02X%02X%02X\n",
+		flash_uid[4], flash_uid[5], flash_uid[6], flash_uid[7],
+		flash_uid[8], flash_uid[9], flash_uid[10], flash_uid[11]);
+
+	create_proc_read_entry(PROC_ENTRY_NAME, 0, NULL, read_proc_dev_uid, NULL);
+
 	/* calculate partition table */
 	recalc_partitions(flash_size, kernel_size);
 
@@ -1266,6 +1307,7 @@ static void __exit raspi_exit(void)
 		kfree(flash);
 		flash = NULL;
 	}
+	remove_proc_entry(PROC_ENTRY_NAME, NULL);
 }
 
 module_init(raspi_init);
