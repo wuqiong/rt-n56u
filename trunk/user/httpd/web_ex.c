@@ -2948,6 +2948,22 @@ static int ej_dump_syslog_hook(int eid, webs_t wp, int argc, char **argv)
 	return 0;
 }
 
+/* get device unique id */
+static int
+ej_get_dev_uid(int eid, webs_t wp, int argc, char **argv)
+{
+	char buffer[17] = {0};
+	FILE *fp;
+	fp = fopen("/proc/dev_uid","r");
+	if(!fp) return 0;
+	memset(buffer,0x0,sizeof(buffer));
+	fgets(buffer, sizeof(buffer), fp);
+	fclose(fp);
+
+	websWrite(wp, "%s", buffer);
+	return 0;
+}
+
 static int ej_dump_eth_mib_hook(int eid, webs_t wp, int argc, char **argv)
 {
 	int eth_port_id = 0;
@@ -3928,6 +3944,7 @@ struct ej_handler ej_handlers[] =
 	{ "hardware_pins", ej_hardware_pins_hook},
 	{ "detect_internet", ej_detect_internet_hook},
 	{ "dump_syslog", ej_dump_syslog_hook},
+	{ "get_dev_uid", ej_get_dev_uid},
 	{ "dump_eth_mib", ej_dump_eth_mib_hook},
 	{ "get_usb_ports_info", ej_get_usb_ports_info},
 	{ "get_ext_ports_info", ej_get_ext_ports_info},

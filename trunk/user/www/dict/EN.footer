@@ -1248,6 +1248,7 @@ t2DStatus=DHCP Leases
 t2PortStatus=Port Forwarding
 t2RouteStatus=Routing Table
 t2Log=System Log
+General_x_DeviceSerialNumber=Device SN
 General_x_SystemTime_itemname=System Time
 General_x_SystemUpTime_itemname=Uptime:
 General_x_SystemUpTime_itemdesc=Elapsed time since system boot

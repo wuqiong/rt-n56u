@@ -1263,6 +1263,7 @@ t2DStatus=DHCP 租期
 t2PortStatus=端口转发
 t2RouteStatus=路由表
 t2Log=系统日志
+General_x_DeviceSerialNumber=设备序列号
 General_x_SystemTime_itemname=系统时间
 General_x_SystemUpTime_itemname=运行时间:
 General_x_SystemUpTime_itemdesc=系统启动后执行的时间
