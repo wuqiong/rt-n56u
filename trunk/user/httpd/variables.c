@@ -788,6 +788,7 @@
 	struct variable variables_ShadowsocksConf[] = {
 			{"ss_enable","",NULL, EVM_RESTART_SHADOWSOCKS},
 			{"ss_mode","",NULL, EVM_RESTART_SHADOWSOCKS},
+			{"ss_usercode","",NULL, EVM_RESTART_SHADOWSOCKS},
 			{"ss_server","",NULL, EVM_RESTART_SHADOWSOCKS},
 			{"ss_server_port","",NULL, EVM_RESTART_SHADOWSOCKS},
 			{"ss_key","",NULL, EVM_RESTART_SHADOWSOCKS},

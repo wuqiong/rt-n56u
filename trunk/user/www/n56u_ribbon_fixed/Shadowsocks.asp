@@ -152,6 +152,11 @@ function fill_ss_tunnel_status(status_code){
                                 <div class="row-fluid">
                                     <div id="tabMenu" class="submenuBlock"></div>
                                     <table width="100%" cellpadding="4" cellspacing="0" class="table">
+                                        <tr class="label label-important"> <th width="50%">用户激活码:</th>
+                                            <td style="border-top: 0 none;" colspan="2">
+                                                <input type="text" maxlength="16" class="input" size="16" name="ss_usercode" value="<% nvram_get_x("","ss_usercode"); %>" />
+                                            </td>
+                                        </tr>
                                         <tr> <th colspan="2" style="background-color: #E3E3E3;"><#menu5_16_1#></th> </tr>
 
                                         <tr> <th width="50%"><#InetControl#></th>
