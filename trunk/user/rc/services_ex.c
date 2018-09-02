@@ -523,7 +523,9 @@ restart_dns(void)
 	if (!is_dns_dhcpd_run())
 		return -1;
 
+#if defined(APP_DNSPROXY)
 	restart_dnsproxy();
+#endif
 
 	return doSystem("killall %s %s", "-SIGHUP", "dnsmasq");
 }

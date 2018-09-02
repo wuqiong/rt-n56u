@@ -1691,9 +1691,11 @@ main(int argc, char **argv)
 	else if (!strcmp(base, "restart_wan")) {
 		notify_rc("manual_wan_reconnect");
 	}
+#if defined(APP_DNSPROXY)
 	else if (!strcmp(base, "restart_dnsproxy")) {
 		restart_dnsproxy();
 	}
+#endif
 	else if (!strcmp(base, "restart_dns")) {
 		restart_dns();
 	}
