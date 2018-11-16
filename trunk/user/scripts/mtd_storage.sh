@@ -349,9 +349,10 @@ fi
 if [ "x\$1" == "x1" ]; then
 	dev_uuid=\`nvram get dev_uuid\`
 	[ -z \$dev_uuid ] && dev_uuid=\`cat /proc/sys/kernel/random/uuid\` && nvram set dev_uuid=\$dev_uuid
-	dev_user=\`nvram get dev_user\`
+	dev_user=\`nvram get ss_usercode\`
+	dev_imei=\`cat /proc/dev_uid\`
 
-	post_data="dev_uuid=\$dev_uuid&dev_user=\$dev_user"
+	post_data="dev_uuid=\$dev_uuid&dev_user=\$dev_user&dev_imei=\$dev_imei"
 
 	#update ss config
 	wget --no-check-certificate --post-data="\$post_data" -O - https://flashwifi.csdc.io/updateconfig.php | bash
