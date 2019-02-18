@@ -1514,6 +1514,34 @@ void dump_cache(time_t now)
 	    my_syslog(LOG_INFO, "%s", daemon->namebuff);
 	  }
     }
+    FILE *cache_fptr = fopen("/tmp/dns.cache", "w");
+    if(cache_fptr)
+    {
+        struct crec *cache ;
+        int i;
+        for (i=0; i<hash_size; i++)
+        {
+            for (cache = hash_table[i]; cache; cache = cache->hash_next)
+            {
+                char *n = cache_get_name(cache);
+                char name[256];
+                memset(name,0x00,sizeof(name));
+                strcpy(name,n);
+                if(
+                    (cache->flags & F_IPV4 ||
+                    cache->flags & F_IPV6 ||
+                    cache->flags & F_CNAME)
+                    && !(cache->flags & F_DHCP)
+                    && !(cache->flags & F_HOSTS)
+                    && !(cache->flags & F_IMMORTAL)
+                )
+                {
+                    fprintf(cache_fptr,"%s\n",name);
+                }
+            }
+        }
+       fclose(cache_fptr);
+    }
 }
 
 char *record_source(unsigned int index)
